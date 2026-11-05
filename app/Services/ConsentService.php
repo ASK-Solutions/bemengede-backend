@@ -24,6 +24,20 @@ class ConsentService
         }
     }
 
+    /** Terms and privacy accepted when an account is created (any sign-up method). */
+    public function recordAccountConsents(User $user, string $source): void
+    {
+        foreach ([Consent::TERMS => 'terms', Consent::PRIVACY => 'privacy'] as $type => $doc) {
+            Consent::create([
+                'user_id' => $user->id,
+                'type' => $type,
+                'version' => config("bemengede.legal.{$doc}.version"),
+                'granted' => true,
+                'source' => $source,
+            ]);
+        }
+    }
+
     /** Opt-in only. Saying "no" never creates a subscription. */
     public function setMarketing(?User $user, ?Booking $booking, string $channel, string $address, bool $granted, string $source): ?MarketingSubscription
     {

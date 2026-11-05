@@ -21,6 +21,8 @@ We collect only what we need to sell and check your ticket.
 | Data | Why we need it | Legal basis |
 |---|---|---|
 | Mobile phone number | Send your ticket and one-time sign-in codes, contact you about changes to your trip | Contract |
+| Username and password (optional) | Let you sign in without a code. We store the password only as a one-way hash, so nobody can read it | Contract |
+| Google account ID, name and email (only if you choose "Continue with Google") | Sign you in with Google. We never receive your Google password and don't access your contacts, Drive or other Google data | Contract |
 | Passenger full name(s) | Printed on the boarding manifest, which the bus company must keep | Contract, legal obligation |
 | Seat number and fare type (adult, child, student) | Issue the right ticket at the right price | Contract |
 | Email address (optional) | Send a copy of your ticket by email | Contract |
@@ -41,6 +43,7 @@ You must be 18 or older to create an account or make a booking. Children can tra
 We never sell your personal data. We share it only as needed with:
 
 - **The bus company** operating your trip: passenger names, seat numbers, the contact phone and booking status.
+- **Google**, only if you choose to sign in with Google: Google confirms who you are to us. Google's own privacy policy covers what Google does.
 - **Payment providers**: Chapa, telebirr (Ethio Telecom), or verify.et for bank transfer checks. They receive the amount, a payment reference and, for Chapa and telebirr, the phone number or email needed to complete the payment.
 - **SMS and email providers** that deliver your ticket and sign-in codes.
 - **Hosting and infrastructure providers** that store our data under contract.
@@ -56,7 +59,8 @@ Some providers may process data outside Ethiopia. We transfer data abroad only w
 
 - Bookings and tickets: while your account is open, and for up to 2 years after your last trip so you can see your history and raise complaints.
 - Payment and accounting records: {{retention_years}} years, as required by tax and accounting law. When you delete your account, we remove your name and contact details from these records and keep only amounts, dates and references.
-- One-time sign-in codes: 5 minutes.
+- One-time sign-in and password reset codes: 5 minutes.
+- Your username, password hash and Google link: until you delete your account or remove them in *Account › Sign-in methods*.
 - Marketing consent records: for as long as you are subscribed, plus proof that you unsubscribed.
 
 ## Your rights

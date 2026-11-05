@@ -19,12 +19,12 @@ class PrivacyService
     public function export(User $user): array
     {
         $bookings = Booking::with('passengers', 'payments', 'trip.route.origin.city', 'trip.route.destination.city', 'operator')
-            ->where(fn ($q) => $q->where('user_id', $user->id)->orWhere('contact_phone', $user->phone))
+            ->ownedBy($user)
             ->get();
 
         return [
             'generated_at' => now()->toIso8601String(),
-            'account' => $user->only(['name', 'phone', 'email', 'locale', 'created_at', 'adult_confirmed_at']),
+            'account' => $user->only(['name', 'username', 'phone', 'email', 'locale', 'created_at', 'adult_confirmed_at']) + ['google_linked' => $user->google_id !== null, 'has_password' => $user->password !== null],
             'consents' => Consent::where('user_id', $user->id)->orderBy('id')->get(['type', 'version', 'granted', 'source', 'created_at']),
             'marketing_subscriptions' => MarketingSubscription::whereIn('address', array_filter([$user->phone, $user->email]))
                 ->get(['channel', 'subscribed_at', 'unsubscribed_at']),
@@ -45,7 +45,7 @@ class PrivacyService
 
     public function blockingBookings(User $user)
     {
-        return Booking::where(fn ($q) => $q->where('user_id', $user->id)->orWhere('contact_phone', $user->phone))
+        return Booking::ownedBy($user)
             ->whereIn('status', [Booking::CONFIRMED, Booking::CHECKED_IN, Booking::AWAITING_VERIFICATION])
             ->whereHas('trip', fn ($q) => $q->where('departure_at', '>', now()))
             ->pluck('reference');
@@ -77,7 +77,7 @@ class PrivacyService
     public function erase(User $user): void
     {
         DB::transaction(function () use ($user) {
-            $bookings = Booking::where(fn ($q) => $q->where('user_id', $user->id)->orWhere('contact_phone', $user->phone))->get();
+            $bookings = Booking::ownedBy($user)->get();
             foreach ($bookings as $b) {
                 $b->passengers()->update(['full_name' => 'Deleted passenger']);
                 $b->update(['user_id' => null, 'contact_phone' => null, 'contact_email' => null, 'anonymized_at' => now()]);

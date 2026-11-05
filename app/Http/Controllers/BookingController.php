@@ -39,7 +39,7 @@ class BookingController extends Controller
     {
         $user = $request->user();
         $booking = Booking::where('reference', strtoupper($reference))->firstOrFail();
-        abort_unless($booking->user_id === $user->id || $booking->contact_phone === $user->phone, 403);
+        abort_unless($user->owns($booking), 403);
 
         return response()->json($this->service->cancel($booking));
     }
@@ -50,7 +50,7 @@ class BookingController extends Controller
         $data = $request->validate(['subject' => ['required', 'string', 'max:120'], 'description' => ['required', 'string', 'max:2000']]);
         $user = $request->user();
         $booking = Booking::where('reference', strtoupper($reference))->firstOrFail();
-        abort_unless($booking->user_id === $user->id || $booking->contact_phone === $user->phone, 404);
+        abort_unless($user->owns($booking), 404);
         $d = \App\Models\Dispute::create($data + ['booking_id' => $booking->id, 'operator_id' => $booking->operator_id, 'user_id' => $user->id]);
 
         return response()->json(['id' => $d->id, 'status' => $d->status], 201);
@@ -59,7 +59,7 @@ class BookingController extends Controller
     public function mine(Request $request): JsonResponse
     {
         $u = $request->user();
-        $bookings = Booking::where(fn ($q) => $q->where('user_id', $u->id)->orWhere('contact_phone', $u->phone))
+        $bookings = Booking::ownedBy($u)
             ->latest()->limit(50)->get()->map(fn ($b) => Present::booking($b));
 
         return response()->json($bookings);
@@ -69,7 +69,7 @@ class BookingController extends Controller
     {
         $booking = Booking::where('reference', strtoupper($reference))->firstOrFail();
         $user = $request->user('sanctum');
-        $owner = $user && ($booking->user_id === $user->id || $booking->contact_phone === $user->phone);
+        $owner = $user && $user->owns($booking);
         $phoneMatches = Phone::normalize($request->query('phone')) === $booking->contact_phone && $booking->contact_phone !== null;
         abort_unless($owner || $phoneMatches, 404);
 

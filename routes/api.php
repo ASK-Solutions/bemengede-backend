@@ -4,6 +4,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\LoginMethodsController;
 use App\Http\Controllers\Operator\BookingController as OpBooking;
 use App\Http\Controllers\Operator\DashboardController;
 use App\Http\Controllers\Operator\FinanceController;
@@ -40,6 +41,11 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
     // Auth
     Route::post('auth/otp', [AuthController::class, 'requestOtp'])->middleware('throttle:otp');
     Route::post('auth/verify', [AuthController::class, 'verifyOtp'])->middleware('throttle:otp');
+    Route::post('auth/register', [AuthController::class, 'register'])->middleware('throttle:auth');
+    Route::post('auth/login', [AuthController::class, 'login'])->middleware('throttle:auth');
+    Route::post('auth/google', [AuthController::class, 'google'])->middleware('throttle:auth');
+    Route::post('auth/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:auth');
+    Route::post('auth/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:auth');
     Route::post('auth/staff', [AuthController::class, 'staffLogin'])->middleware('throttle:otp');
     Route::get('auth/invitations/{token}', [AuthController::class, 'invitation'])->middleware('throttle:lookup');
     Route::post('auth/invitations/{token}', [AuthController::class, 'acceptInvitation'])->middleware('throttle:otp');
@@ -68,6 +74,11 @@ Route::prefix('v1')->middleware('throttle:api')->group(function () {
         Route::post('bookings/{reference}/disputes', [BookingController::class, 'dispute']);
 
         Route::patch('me', [AccountController::class, 'update']);
+        Route::put('me/password', [LoginMethodsController::class, 'password']);
+        Route::post('me/google', [LoginMethodsController::class, 'linkGoogle']);
+        Route::delete('me/google', [LoginMethodsController::class, 'unlinkGoogle']);
+        Route::post('me/phone/code', [LoginMethodsController::class, 'phoneCode'])->middleware('throttle:otp');
+        Route::post('me/phone', [LoginMethodsController::class, 'phone'])->middleware('throttle:otp');
         Route::get('me/consents', [AccountController::class, 'consents']);
         Route::put('me/consents', [AccountController::class, 'updateConsents']);
         Route::get('me/export', [AccountController::class, 'export']);

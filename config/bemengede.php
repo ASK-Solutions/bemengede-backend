@@ -54,10 +54,10 @@ return [
     | that needs fresh consent; the apps then ask users to accept it again.
     */
     'legal' => [
-        'privacy' => ['version' => '2026-11-04', 'effective' => '2026-11-04'],
+        'privacy' => ['version' => '2026-11-05', 'effective' => '2026-11-05'],
         'terms' => ['version' => '2026-11-04', 'effective' => '2026-11-04'],
         'refund' => ['version' => '2026-11-04', 'effective' => '2026-11-04'],
-        'cookies' => ['version' => '2026-11-04', 'effective' => '2026-11-04'],
+        'cookies' => ['version' => '2026-11-05', 'effective' => '2026-11-05'],
     ],
 
     'payments' => [

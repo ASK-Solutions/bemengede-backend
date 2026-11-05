@@ -14,6 +14,10 @@ These are needed for the site to work. You cannot switch them off, but they cont
 | `bm_session` | Session storage | Keeps you signed in while the tab is open | Until you close the tab |
 | `bm_booking`, `bm_phone_*` | Session storage | Remembers the booking you are paying for | Until you close the tab |
 
+## Signing in with Google
+
+If you click **Continue with Google**, Google's sign-in window opens and Google may set its own cookies on its own website. We load Google's sign-in code only after you click that button, never before.
+
 ## Optional analytics (off unless you allow them)
 
 If you choose **Allow analytics**, we would load privacy-friendly, aggregated analytics to understand which pages work and which confuse people. **No analytics tool is installed at launch.** If we add one, we will list its name, provider and cookies here before turning it on, and it will load only after you say yes.

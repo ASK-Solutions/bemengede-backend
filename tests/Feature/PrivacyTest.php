@@ -35,7 +35,7 @@ class PrivacyTest extends TestCase
         $this->otp('+251911000111');
         $this->postJson('/api/v1/auth/verify', ['phone' => '0911000111', 'code' => '123456'])->assertJsonValidationErrors('confirm_adult');
         $this->otp('+251911000111');
-        $this->postJson('/api/v1/auth/verify', ['phone' => '0911000111', 'code' => '123456', 'confirm_adult' => true])->assertOk()->assertJsonStructure(['token']);
+        $this->postJson('/api/v1/auth/verify', ['phone' => '0911000111', 'code' => '123456', 'confirm_adult' => true, 'accept_terms' => true])->assertOk()->assertJsonStructure(['token']);
     }
 
     public function test_unsubscribe_link_works_without_login(): void

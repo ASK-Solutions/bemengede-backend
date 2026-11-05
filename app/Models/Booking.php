@@ -40,6 +40,17 @@ class Booking extends Model
         return $ref;
     }
 
+    /** Bookings that belong to a user (see User::owns for the rule). */
+    public function scopeOwnedBy(\Illuminate\Database\Eloquent\Builder $q, User $user): \Illuminate\Database\Eloquent\Builder
+    {
+        return $q->where(function ($w) use ($user) {
+            $w->where('user_id', $user->id);
+            if ($user->phone && $user->phone_verified_at) {
+                $w->orWhere('contact_phone', $user->phone);
+            }
+        });
+    }
+
     public function trip(): BelongsTo
     {
         return $this->belongsTo(Trip::class);

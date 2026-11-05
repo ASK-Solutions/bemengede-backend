@@ -16,7 +16,7 @@ class ReviewController extends Controller
         $data = $request->validate(['rating' => ['required', 'integer', 'between:1,5'], 'comment' => ['nullable', 'string', 'max:1000']]);
         $u = $request->user();
         $b = Booking::where('reference', strtoupper($reference))->firstOrFail();
-        abort_unless($b->user_id === $u->id || $b->contact_phone === $u->phone, 403);
+        abort_unless($u->owns($b), 403);
         abort_unless($b->isPaid() && $b->trip->arrival_at->isPast(), 422, 'You can review this trip after you have travelled.');
         abort_if($b->review()->exists(), 422, 'You have already reviewed this trip.');
 

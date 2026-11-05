@@ -42,7 +42,10 @@ class AccountController extends Controller
         $data = $request->validate(['marketing_sms' => ['sometimes', 'boolean'], 'marketing_email' => ['sometimes', 'boolean']]);
         $u = $request->user();
         if (array_key_exists('marketing_sms', $data)) {
-            $this->consents->setMarketing($u, null, 'sms', $u->phone, $data['marketing_sms'], $request->header('X-Client', 'web'));
+            abort_if($data['marketing_sms'] && ! $u->phone, 422, 'Add and verify a phone number first.');
+            if ($u->phone) {
+                $this->consents->setMarketing($u, null, 'sms', $u->phone, $data['marketing_sms'], $request->header('X-Client', 'web'));
+            }
         }
         if (array_key_exists('marketing_email', $data)) {
             abort_if($data['marketing_email'] && ! $u->email, 422, 'Add an email address first.');

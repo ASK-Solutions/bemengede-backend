@@ -18,9 +18,9 @@ class User extends Authenticatable
     public const ROLE_OPERATOR_AGENT = 'operator_agent';
     public const ROLE_PLATFORM_ADMIN = 'platform_admin';
 
-    protected $fillable = ['name', 'phone', 'email', 'locale', 'adult_confirmed_at', 'phone_verified_at'];
+    protected $fillable = ['name', 'username', 'phone', 'email', 'locale', 'adult_confirmed_at', 'phone_verified_at', 'email_verified_at'];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = ['password', 'remember_token', 'google_id'];
 
     protected function casts(): array
     {
@@ -45,6 +45,27 @@ class User extends Authenticatable
     public function consents(): HasMany
     {
         return $this->hasMany(Consent::class);
+    }
+
+    /**
+     * True when this user may see a booking: they made it while signed in, or it was booked
+     * with their verified phone number. A missing phone never matches (anonymised bookings
+     * also have no phone, so comparing two empty values would leak them).
+     */
+    public function owns(Booking $booking): bool
+    {
+        return $booking->user_id === $this->id
+            || ($this->phone && $this->phone_verified_at && $booking->contact_phone === $this->phone);
+    }
+
+    /** Which sign-in methods this account has, for the account screen. */
+    public function loginMethods(): array
+    {
+        return [
+            'phone' => (bool) ($this->phone && $this->phone_verified_at),
+            'password' => $this->password !== null,
+            'google' => $this->google_id !== null,
+        ];
     }
 
     public function isOperatorStaff(): bool

@@ -22,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
     {
         RateLimiter::for('api', fn (Request $r) => Limit::perMinute(120)->by($r->user()?->id ?: $r->ip()));
         RateLimiter::for('otp', fn (Request $r) => Limit::perMinute(5)->by($r->ip()));
+        // Sign-in and sign-up per IP; wrong passwords are also limited per account in AuthController::login.
+        RateLimiter::for('auth', fn (Request $r) => Limit::perMinute(30)->by($r->ip()));
         RateLimiter::for('lookup', fn (Request $r) => Limit::perMinute(20)->by($r->ip()));
     }
 }
