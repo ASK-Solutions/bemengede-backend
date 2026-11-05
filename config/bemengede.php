@@ -64,6 +64,17 @@ return [
         // "mock" simulates every provider locally; use "live" only with real credentials.
         'mode' => env('PAYMENTS_MODE', 'mock'),
         'platform_commission_percent' => (float) env('PLATFORM_COMMISSION_PERCENT', 5),
+        // Commission is charged on fares sold online. Counter (cash) sales are commission-free
+        // unless this is switched on in the partner agreement.
+        'commission_on_counter_sales' => (bool) env('COMMISSION_ON_COUNTER_SALES', false),
+        // Gateway fees in percent of the amount charged. Set these from your provider contracts.
+        // The platform pays gateway fees out of the service fee; operators never see them deducted.
+        'gateway_fee_percent' => [
+            'chapa' => (float) env('CHAPA_FEE_PERCENT', 0),
+            'telebirr' => (float) env('TELEBIRR_FEE_PERCENT', 0),
+            'transfer' => 0.0,
+            'cash' => 0.0,
+        ],
 
         'chapa' => [
             'base_url' => env('CHAPA_BASE_URL', 'https://api.chapa.co/v1'),

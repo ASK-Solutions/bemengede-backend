@@ -44,6 +44,18 @@ class BookingController extends Controller
         return response()->json($this->service->cancel($booking));
     }
 
+    /** A traveller raises a complaint about a booking; the platform team handles it. */
+    public function dispute(Request $request, string $reference): JsonResponse
+    {
+        $data = $request->validate(['subject' => ['required', 'string', 'max:120'], 'description' => ['required', 'string', 'max:2000']]);
+        $user = $request->user();
+        $booking = Booking::where('reference', strtoupper($reference))->firstOrFail();
+        abort_unless($booking->user_id === $user->id || $booking->contact_phone === $user->phone, 404);
+        $d = \App\Models\Dispute::create($data + ['booking_id' => $booking->id, 'operator_id' => $booking->operator_id, 'user_id' => $user->id]);
+
+        return response()->json(['id' => $d->id, 'status' => $d->status], 201);
+    }
+
     public function mine(Request $request): JsonResponse
     {
         $u = $request->user();

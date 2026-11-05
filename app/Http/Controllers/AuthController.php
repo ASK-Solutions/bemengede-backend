@@ -71,6 +71,33 @@ class AuthController extends Controller
         return response()->json(['token' => $user->createToken('staff', ['*'], now()->addHours(12))->plainTextToken, 'user' => $this->me($user)]);
     }
 
+    public function invitation(string $token): JsonResponse
+    {
+        $inv = \App\Models\StaffInvitation::with('operator:id,name')->where('token', $token)->whereNull('accepted_at')->where('expires_at', '>', now())->firstOrFail();
+
+        return response()->json(['name' => $inv->name, 'email' => $inv->email, 'role' => $inv->role, 'operator' => $inv->operator?->name]);
+    }
+
+    /** A staff member sets their password from the emailed invitation link. */
+    public function acceptInvitation(Request $request, string $token): JsonResponse
+    {
+        $request->validate([
+            'password' => ['required', 'string', 'min:10', 'confirmed'],
+            'confirm_adult' => ['accepted'],
+        ], ['confirm_adult.accepted' => 'Staff accounts are for people aged 18 or older.']);
+        $inv = \App\Models\StaffInvitation::where('token', $token)->whereNull('accepted_at')->where('expires_at', '>', now())->firstOrFail();
+
+        $user = User::firstOrNew(['phone' => $inv->phone]);
+        $user->fill(['name' => $inv->name, 'email' => $inv->email])->forceFill([
+            'role' => $inv->role, 'operator_id' => $inv->operator_id, 'password' => $request->password,
+            'adult_confirmed_at' => now(), 'email_verified_at' => now(),
+        ])->save();
+        $inv->update(['accepted_at' => now()]);
+        \App\Models\AuditLog::record('staff.joined', $user, ['role' => $inv->role], $inv->operator_id);
+
+        return response()->json(['token' => $user->createToken('staff', ['*'], now()->addHours(12))->plainTextToken, 'user' => $this->me($user)]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();

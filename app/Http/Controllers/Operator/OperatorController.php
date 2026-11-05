@@ -2,56 +2,16 @@
 
 namespace App\Http\Controllers\Operator;
 
-use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
-use App\Models\Booking;
 use App\Models\Passenger;
-use App\Models\Trip;
 use App\Models\TransferVerification;
 use App\Services\Payments\PaymentManager;
-use App\Support\Present;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /** Every query here is scoped to the signed-in staff member's own company. */
-class OperatorController extends Controller
+class OperatorController extends OperatorScoped
 {
-    private function opId(Request $r): int
-    {
-        return (int) $r->user()->operator_id;
-    }
-
-    public function trips(Request $request): JsonResponse
-    {
-        $trips = Trip::with('operator', 'bus', 'route.origin.city', 'route.destination.city')
-            ->where('operator_id', $this->opId($request))
-            ->where('departure_at', '>', now()->subDay())->orderBy('departure_at')->limit(100)->get()
-            ->map(fn ($t) => Present::trip($t) + ['sold' => Booking::where('trip_id', $t->id)->whereIn('status', [Booking::CONFIRMED, Booking::CHECKED_IN])->withCount('passengers')->get()->sum('passengers_count')]);
-
-        return response()->json($trips);
-    }
-
-    public function storeTrip(Request $request): JsonResponse
-    {
-        $op = $this->opId($request);
-        $data = $request->validate([
-            'route_id' => ['required', 'integer', "exists:routes,id,operator_id,{$op}"],
-            'bus_id' => ['required', 'integer', "exists:buses,id,operator_id,{$op}"],
-            'departure_at' => ['required', 'date', 'after:now'],
-            'base_fare_etb' => ['required', 'numeric', 'min:1', 'max:100000'],
-        ]);
-        $route = \App\Models\Route::findOrFail($data['route_id']);
-        $dep = \Illuminate\Support\Carbon::parse($data['departure_at']);
-        $trip = Trip::create([
-            'operator_id' => $op, 'route_id' => $route->id, 'bus_id' => $data['bus_id'],
-            'departure_at' => $dep, 'arrival_at' => $dep->copy()->addMinutes($route->duration_minutes),
-            'base_fare' => (int) round($data['base_fare_etb'] * 100),
-        ]);
-        AuditLog::record('trip.created', $trip);
-
-        return response()->json($trip, 201);
-    }
-
     public function verifications(Request $request): JsonResponse
     {
         $rows = TransferVerification::with('payment.booking.passengers')

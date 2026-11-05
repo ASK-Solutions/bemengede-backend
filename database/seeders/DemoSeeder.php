@@ -12,7 +12,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
-/** Local demo data only. Logins: admin@bemengede.test / selam@bemengede.test, password "password". */
+/** Local demo data only. Logins: admin@bemengede.test (platform admin) and selam@bemengede.test (Selam Bus owner), password "password". */
 class DemoSeeder extends Seeder
 {
     public function run(): void
@@ -22,6 +22,9 @@ class DemoSeeder extends Seeder
             'status' => 'active',
             'partnership_signed_at' => now(), // demo only — in production an admin records the real signing
             'legal_name' => 'Selam Bus Line S.C.',
+            'tin' => '0000000000', // demo placeholder
+            'trade_license_no' => 'DEMO-TL-0001',
+            'operating_license_no' => 'DEMO-OL-0001',
             'brand_color' => '#1E6B57',
             'logo_alt' => 'Selam Bus logo',
         ]);
@@ -32,6 +35,12 @@ class DemoSeeder extends Seeder
         $user->fill(['phone' => '+251900000001', 'name' => 'Platform Admin'])->forceFill(['role' => User::ROLE_PLATFORM_ADMIN, 'password' => 'password', 'adult_confirmed_at' => now()])->save();
         $owner = User::firstOrNew(['email' => 'selam@bemengede.test']);
         $owner->fill(['phone' => '+251900000002', 'name' => 'Selam Owner'])->forceFill(['role' => User::ROLE_OPERATOR_OWNER, 'operator_id' => $selam->id, 'password' => 'password', 'adult_confirmed_at' => now()])->save();
+
+        foreach (['trade_license', 'operating_license'] as $type) {
+            \App\Models\OperatorDocument::firstOrCreate(['operator_id' => $selam->id, 'type' => $type], ['path' => 'demo/'.$type.'.pdf', 'status' => 'approved']);
+        }
+        $drivers = collect([['Tesfaye Gebre', '+251911000101', 'DL-1001', now()->addDays(20)], ['Mulugeta Alemu', '+251911000102', 'DL-1002', now()->addYear()]])
+            ->map(fn ($d) => \App\Models\Driver::firstOrCreate(['operator_id' => $selam->id, 'license_no' => $d[2]], ['full_name' => $d[0], 'phone' => $d[1], 'license_expires_on' => $d[3]]));
 
         $layout = ['rows' => 13, 'columns' => 4, 'aisle_after' => 2, 'blocked' => []];
         $buses = collect(['AA 3-B12345', 'AA 3-B19044', 'AA 3-B20517'])->map(fn ($plate, $i) => Bus::firstOrCreate(
@@ -50,13 +59,13 @@ class DemoSeeder extends Seeder
             $dest = Terminal::where('city_id', City::where('name_en', $city)->value('id'))->firstOrFail();
             $route = Route::firstOrCreate(
                 ['operator_id' => $selam->id, 'origin_terminal_id' => $addis->id, 'destination_terminal_id' => $dest->id],
-                ['distance_km' => $km, 'duration_minutes' => $mins, 'stops' => $stops],
+                ['distance_km' => $km, 'duration_minutes' => $mins, 'stops' => $stops, 'default_fare' => $fare],
             );
             for ($d = 0; $d < 14; $d++) {
                 $dep = Carbon::parse(now('Africa/Addis_Ababa')->addDays($d)->format('Y-m-d').' '.$time, 'Africa/Addis_Ababa')->utc();
                 Trip::firstOrCreate(
                     ['route_id' => $route->id, 'departure_at' => $dep],
-                    ['operator_id' => $selam->id, 'bus_id' => $buses[$i % 3]->id, 'arrival_at' => $dep->copy()->addMinutes($mins), 'base_fare' => $fare],
+                    ['operator_id' => $selam->id, 'bus_id' => $buses[$i % 3]->id, 'driver_id' => $drivers[$i % 2]->id, 'arrival_at' => $dep->copy()->addMinutes($mins), 'base_fare' => $fare],
                 );
             }
         }
